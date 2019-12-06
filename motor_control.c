@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "nrf.h"
+//#include "nrf_log.h"
 #include "app_error.h"
 #include "bsp.h"
 #include "nrf_delay.h"
@@ -11,13 +12,12 @@ int32_t right_target_speed = 0;
 
 APP_PWM_INSTANCE(PWM1,1);                   // Create the instance "PWM1" using TIMER1.
 
-static volatile bool ready_flag;            // A flag indicating PWM status.
+static volatile bool ready_flag = false;            // A flag indicating PWM status.
 
 void pwm_ready_callback(uint32_t pwm_id)    // PWM callback function
 {
-    APP_ERROR_CHECK(app_pwm_channel_duty_set(&PWM1, 0, 50));
-    APP_ERROR_CHECK(app_pwm_channel_duty_set(&PWM1, 1, 99));
-    NRF_LOG("PWM ready.");
+    ready_flag = true;
+    //NRF_LOG_INFO("PWM ready.");
 }
 
 uint32_t motor_control_init(uint32_t left_pwm_pin,
@@ -40,13 +40,21 @@ uint32_t motor_control_init(uint32_t left_pwm_pin,
     APP_ERROR_CHECK(err_code);
     app_pwm_enable(&PWM1);
 
-    NRF_LOG("Motor control initialized.");
+    //NRF_LOG_INFO("Motor control initialized.");
 
     return NRF_SUCCESS;
 }
 
 void motor_control_set(int32_t left_new_speed, int32_t right_new_speed)
 {
-    left_target_speed = left_new_speed;
-    right_target_speed = right_new_speed;
+    if (ready_flag) {
+        left_target_speed = left_new_speed;
+        right_target_speed = right_new_speed;
+
+        APP_ERROR_CHECK(app_pwm_channel_duty_set(&PWM1, 0, 0));
+        APP_ERROR_CHECK(app_pwm_channel_duty_set(&PWM1, 1, 0));
+    } else {
+        left_target_speed = left_new_speed;
+        right_target_speed = right_new_speed;
+    }
 }

@@ -390,11 +390,11 @@ static void sleep_mode_enter(void)
     ret_code_t err_code;
 
     //err_code = bsp_indication_set(BSP_INDICATE_IDLE);
-    APP_ERROR_CHECK(err_code);
+   // APP_ERROR_CHECK(err_code);
 
     // Prepare wakeup buttons.
     //err_code = bsp_btn_ble_sleep_mode_prepare();
-    APP_ERROR_CHECK(err_code);
+    //APP_ERROR_CHECK(err_code);
 
     // Go to system-off mode (this function will not return; wakeup will cause a reset).
     err_code = sd_power_system_off();
@@ -417,7 +417,7 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
         case BLE_ADV_EVT_FAST:
             NRF_LOG_INFO("Fast advertising.");
             //err_code = bsp_indication_set(BSP_INDICATE_ADVERTISING);
-            APP_ERROR_CHECK(err_code);
+            //APP_ERROR_CHECK(err_code);
             break;
 
         case BLE_ADV_EVT_IDLE:
@@ -449,7 +449,7 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
         case BLE_GAP_EVT_CONNECTED:
             NRF_LOG_INFO("Connected.");
             //err_code = bsp_indication_set(BSP_INDICATE_CONNECTED);
-            APP_ERROR_CHECK(err_code);
+            //APP_ERROR_CHECK(err_code);
             m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
             err_code = nrf_ble_qwr_conn_handle_assign(&m_qwr, m_conn_handle);
             APP_ERROR_CHECK(err_code);
@@ -710,7 +710,7 @@ int main(void)
 
     // Initialize.
     log_init();
-    timers_init();
+    /*timers_init();
 //    buttons_leds_init(&erase_bonds);
     power_management_init();
     ble_stack_init();
@@ -725,13 +725,14 @@ int main(void)
     NRF_LOG_INFO("Template example started.");
     application_timers_start();
 
-    advertising_start(erase_bonds);
+    advertising_start(erase_bonds);*/
 
     motor_control_init(0,1,2,3,4,5);
 
     // Enter main loop.
     for (;;)
     {
+        motor_control_set(1,1);
         idle_state_handle();
     }
 }
