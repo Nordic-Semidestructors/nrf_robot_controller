@@ -47,18 +47,9 @@ uint32_t motor_control_init(uint32_t left_pwm_pin,
 
 void motor_control_set(int32_t left_new_speed, int32_t right_new_speed)
 {
+    left_target_speed = left_new_speed;
+    right_target_speed = right_new_speed;
 
-    app_pwm_channel_duty_set(&PWM1, 0, 0);
-    app_pwm_channel_duty_set(&PWM1, 1, 0);
-
-    if (ready_flag) {
-        left_target_speed = left_new_speed;
-        right_target_speed = right_new_speed;
-
-        app_pwm_channel_duty_set(&PWM1, 0, 50);
-        app_pwm_channel_duty_set(&PWM1, 1, 50);
-    } else {
-        left_target_speed = left_new_speed;
-        right_target_speed = right_new_speed;
-    }
+    app_pwm_channel_duty_set(&PWM1, 0, left_new_speed);
+    app_pwm_channel_duty_set(&PWM1, 1, right_new_speed);
 }

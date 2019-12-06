@@ -77,6 +77,7 @@
 #include "nrf_ble_gatt.h"
 #include "nrf_ble_qwr.h"
 #include "nrf_pwr_mgmt.h"
+#include "nrf_delay.h"
 
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
@@ -728,12 +729,17 @@ int main(void)
     advertising_start(erase_bonds);*/
 
     motor_control_init(0,1,2,3,4,5);
+  
+    int32_t value = 0;
 
     // Enter main loop.
     for (;;)
     {
-        motor_control_set(1,1);
-        idle_state_handle();
+        value++;
+        value = (value % 100);
+        motor_control_set(value, value);
+        nrf_delay_ms(25);
+        //idle_state_handle();
     }
 }
 
