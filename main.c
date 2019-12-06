@@ -711,7 +711,7 @@ int main(void)
 
     // Initialize.
     log_init();
-    /*timers_init();
+    timers_init();
 //    buttons_leds_init(&erase_bonds);
     power_management_init();
     ble_stack_init();
@@ -726,7 +726,7 @@ int main(void)
     NRF_LOG_INFO("Template example started.");
     application_timers_start();
 
-    advertising_start(erase_bonds);*/
+    advertising_start(erase_bonds);
 
     motor_control_init(0,1,2,3,4,5);
   
@@ -738,8 +738,8 @@ int main(void)
         value++;
         value = (value % 100);
         motor_control_set(value, value);
-        nrf_delay_ms(25);
-        //idle_state_handle();
+        //nrf_delay_ms(25);
+        idle_state_handle();
     }
 }
 
