@@ -84,6 +84,7 @@
 #include "nrf_log_default_backends.h"
 
 #include "motor_control.h"
+#include "PID.h"
 
 
 #define DEVICE_NAME                     "Nordic_Template"                       /**< Name of device. Will be included in the advertising data. */
@@ -728,7 +729,8 @@ int main(void)
 
     advertising_start(erase_bonds);
 
-    motor_control_init(0,1,2,3,4,5);
+    motor_control_init(LED_1,LED_3,0,LED_2,LED_4,1); // Test PWM and 1 bit of direction
+    //motor_control_init(0,LED_1,LED_2,1,LED_3,LED_4); // Test direction
   
     int32_t value = 0;
 
@@ -737,7 +739,7 @@ int main(void)
     {
         value++;
         value = (value % 100);
-        motor_control_set(value, value);
+        motor_control_set(value, value-49);
         //nrf_delay_ms(25);
         idle_state_handle();
     }
