@@ -115,12 +115,20 @@
 
 #define DEAD_BEEF                       0xDEADBEEF                              /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
+#define MAX_THROTTLE                    100                                     /**< The absolute highest throttle value. */
+#define MAX_TURN_RATE                   30                                      /**< How much more power is given to one wheel compared to the other when turning around. */
 
 NRF_BLE_GATT_DEF(m_gatt);                                                       /**< GATT module instance. */
 NRF_BLE_QWR_DEF(m_qwr);                                                         /**< Context for the Queued Write module.*/
 BLE_ADVERTISING_DEF(m_advertising);                                             /**< Advertising module instance. */
 
 static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID;                        /**< Handle of the current connection. */
+static int32_t m_target_throttle = 0;
+static int32_t m_target_turn_rate = 0;
+static int32_t m_PID_output = 0;
+static PIDController m_PID_controller;
+
+static int32_t mock_turn_sensor_output = 0;
 
 /* YOUR_JOB: Declare all services structure your application is using
  *  BLE_XYZ_DEF(m_xyz);
@@ -704,6 +712,93 @@ static void advertising_start(bool erase_bonds)
 }
 
 
+static void motor_control_update(int32_t throttle, int32_t turn_rate)
+{
+    int32_t left_motor_throttle = 0;
+    int32_t right_motor_throttle = 0;
+
+    // Cut throttle if input is invalid.
+    if (abs(throttle) > MAX_THROTTLE || abs(turn_rate) > MAX_TURN_RATE)
+    {
+        motor_control_set(0, 0);
+        return;
+    }
+
+    left_motor_throttle = throttle + turn_rate;
+    right_motor_throttle = throttle - turn_rate;
+    if (left_motor_throttle > MAX_THROTTLE) {
+        right_motor_throttle -= left_motor_throttle - MAX_THROTTLE;
+        left_motor_throttle = MAX_THROTTLE;
+    }
+    if (right_motor_throttle > MAX_THROTTLE) {
+        left_motor_throttle -= right_motor_throttle - MAX_THROTTLE;
+        right_motor_throttle = MAX_THROTTLE;
+    }
+    if (left_motor_throttle < -MAX_THROTTLE) {
+        right_motor_throttle += -left_motor_throttle + MAX_THROTTLE;
+        left_motor_throttle = -MAX_THROTTLE;
+    }
+    if (right_motor_throttle < -MAX_THROTTLE) {
+        left_motor_throttle += -right_motor_throttle + MAX_THROTTLE;
+        right_motor_throttle = -MAX_THROTTLE;
+    }
+
+    //value++;
+    //value = (value % 100);
+    motor_control_set(left_motor_throttle, right_motor_throttle);
+}
+
+int pidSource()
+{
+    // Here a sensor needs to return the actual turing rate
+    //return m_target_turn_rate;
+    return mock_turn_sensor_output;
+
+}
+
+
+void pidOutput(int output)
+{
+    m_PID_output = output;
+    NRF_LOG_INFO("Target: %d, Sensor: %d, PID: %d", m_target_turn_rate, mock_turn_sensor_output, output);
+    mock_turn_sensor_output += output;
+}
+
+void PID_controller_init(double p, double i, double d)
+{
+    m_PID_controller.p = p;
+    m_PID_controller.i = i;
+    m_PID_controller.d = d;
+    m_PID_controller.target = 0;
+    m_PID_controller.output = 0;
+    m_PID_controller.enabled = 1;
+    m_PID_controller.currentFeedback = 0;
+    m_PID_controller.lastFeedback = 0;
+    m_PID_controller.lastError = 0;
+    m_PID_controller.currentTime = 0L;
+    m_PID_controller.lastTime = 0L;
+    m_PID_controller.integralCumulation = 0;
+    m_PID_controller.maxCumulation = 30000;
+    m_PID_controller.inputBounded = 0;
+    m_PID_controller.outputBounded = 0;
+    m_PID_controller.inputLowerBound = 0;
+    m_PID_controller.inputUpperBound = 0;
+    m_PID_controller.outputBounded = 0;
+    m_PID_controller.outputLowerBound = 0;
+    m_PID_controller.outputUpperBound = 0;
+    m_PID_controller.timeFunctionRegistered = 0;
+    m_PID_controller.pidSource = pidSource;
+    m_PID_controller.pidOutput = pidOutput;
+    m_PID_controller.getSystemTime = NULL;
+}
+
+// Call this whenever a new measurement is available.
+static void PID_update()
+{
+    m_PID_controller.target = m_target_turn_rate;
+    tick(&m_PID_controller);
+}
+
 /**@brief Function for application main entry.
  */
 int main(void)
@@ -730,17 +825,26 @@ int main(void)
     advertising_start(erase_bonds);
 
     motor_control_init(LED_1,LED_3,0,LED_2,LED_4,1); // Test PWM and 1 bit of direction
+    PID_controller_init(1.0, 0.1, 0.0);
     //motor_control_init(0,LED_1,LED_2,1,LED_3,LED_4); // Test direction
-  
-    int32_t value = 0;
+
+    int value = 0;
 
     // Enter main loop.
     for (;;)
     {
+        /* Test code */
+        
+        m_target_throttle = 0;
         value++;
-        value = (value % 100);
-        motor_control_set(value, value-49);
-        //nrf_delay_ms(25);
+        value = value % 60;
+        m_target_turn_rate = 15; //value - 30;
+
+        /* End test code */
+        PID_update();
+        motor_control_update(m_target_throttle, m_target_turn_rate);    // Direct control
+        //motor_control_update(m_target_throttle, m_PID_output);  // PID Enabled
+        nrf_delay_ms(25);
         idle_state_handle();
     }
 }

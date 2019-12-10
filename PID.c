@@ -69,7 +69,8 @@
  * @param (*pidSource) The function pointer for retrieving system feedback.
  * @param (*pidOutput) The function pointer for delivering system output.
  */
-PIDController *createPIDController(double p, double i, double d, int (*pidSource)(void), void (*pidOutput)(int output)) {
+//Disabled to remove requirement of malloc. - Rune Holmgren
+/*PIDController *createPIDController(double p, double i, double d, int (*pidSource)(void), void (*pidOutput)(int output)) {
 
     PIDController *controller = malloc(sizeof(PIDController));
     controller->p = p;
@@ -97,7 +98,7 @@ PIDController *createPIDController(double p, double i, double d, int (*pidSource
     controller->pidOutput = pidOutput;
     controller->getSystemTime = NULL;
     return controller;
-}
+}*/
 
 /**
  * This method uses the established function pointers to retrieve system

@@ -38,7 +38,8 @@ typedef struct pid_controller {
 
 } PIDController;
 
-PIDController *createPIDController(double p, double i, double d, int (*pidSource)(void), void (*pidOutput)(int output));
+//Disabled to remove requirement of malloc. - Rune Holmgren
+//PIDController *createPIDController(double p, double i, double d, int (*pidSource)(void), void (*pidOutput)(int output));
 
 void tick(PIDController *controller);
 void setEnabled(PIDController *controller, uint8_t e);
