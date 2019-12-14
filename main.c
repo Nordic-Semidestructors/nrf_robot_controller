@@ -116,7 +116,7 @@
 #define DEAD_BEEF                       0xDEADBEEF                              /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
 #define MAX_THROTTLE                    100                                     /**< The absolute highest throttle value. */
-#define MAX_TURN_RATE                   30                                      /**< How much more power is given to one wheel compared to the other when turning around. */
+#define MAX_TURN_RATE                   100                                      /**< How much more power is given to one wheel compared to the other when turning around. */
 
 NRF_BLE_GATT_DEF(m_gatt);                                                       /**< GATT module instance. */
 NRF_BLE_QWR_DEF(m_qwr);                                                         /**< Context for the Queued Write module.*/
@@ -726,22 +726,24 @@ static void motor_control_update(int32_t throttle, int32_t turn_rate)
 
     left_motor_throttle = throttle + turn_rate;
     right_motor_throttle = throttle - turn_rate;
-    if (left_motor_throttle > MAX_THROTTLE) {
-        right_motor_throttle -= left_motor_throttle - MAX_THROTTLE;
+    if (left_motor_throttle > MAX_THROTTLE) {        
         left_motor_throttle = MAX_THROTTLE;
+        right_motor_throttle = left_motor_throttle - turn_rate * 2;
     }
     if (right_motor_throttle > MAX_THROTTLE) {
-        left_motor_throttle -= right_motor_throttle - MAX_THROTTLE;
         right_motor_throttle = MAX_THROTTLE;
+        left_motor_throttle = right_motor_throttle + turn_rate * 2;
     }
-    if (left_motor_throttle < -MAX_THROTTLE) {
-        right_motor_throttle += -left_motor_throttle + MAX_THROTTLE;
+    if (left_motor_throttle < -MAX_THROTTLE) {        
         left_motor_throttle = -MAX_THROTTLE;
+        right_motor_throttle = -left_motor_throttle + turn_rate * 2;
     }
     if (right_motor_throttle < -MAX_THROTTLE) {
-        left_motor_throttle += -right_motor_throttle + MAX_THROTTLE;
         right_motor_throttle = -MAX_THROTTLE;
+        left_motor_throttle = -right_motor_throttle - turn_rate * 2;
     }
+
+    NRF_LOG_INFO("th :%d, tr:%d, lf:%d, rt:%d", throttle, turn_rate, left_motor_throttle, right_motor_throttle);
 
     //value++;
     //value = (value % 100);
@@ -824,7 +826,8 @@ int main(void)
 
     advertising_start(erase_bonds);
 
-    motor_control_init(LED_1,LED_3,0,LED_2,LED_4,1); // Test PWM and 1 bit of direction
+    motor_control_init(26,24,2,27,22,23); // Test PWM and 1 bit of direction
+    //motor_control_init(LED_1,11,12,LED_2,26,27); // Test PWM and 1 bit of direction
     PID_controller_init(1.0, 0.1, 0.0);
     //motor_control_init(0,LED_1,LED_2,1,LED_3,LED_4); // Test direction
 
@@ -837,14 +840,32 @@ int main(void)
         
         m_target_throttle = 0;
         value++;
-        value = value % 60;
-        m_target_turn_rate = 15; //value - 30;
+        value = value % 200;
+        m_target_turn_rate = value - 100;
+        m_target_turn_rate = 0;
 
+        /*nrf_gpio_cfg_output(11);
+        nrf_gpio_cfg_output(12);
+        nrf_gpio_cfg_output(13);
+        nrf_gpio_cfg_output(14);
+        nrf_gpio_cfg_output(15);
+        nrf_gpio_cfg_output(16);
+        nrf_gpio_cfg_output(17);
+        nrf_gpio_cfg_output(18);
+
+        nrf_gpio_pin_write(11, true);
+        nrf_gpio_pin_write(12, true);
+        nrf_gpio_pin_write(13, true);  
+        nrf_gpio_pin_write(14, true);
+        nrf_gpio_pin_write(15, true);
+        nrf_gpio_pin_write(16, true);
+        nrf_gpio_pin_write(17, true);
+        nrf_gpio_pin_write(18, true);*/
         /* End test code */
-        PID_update();
+        //PID_update();
         motor_control_update(m_target_throttle, m_target_turn_rate);    // Direct control
         //motor_control_update(m_target_throttle, m_PID_output);  // PID Enabled
-        nrf_delay_ms(25);
+        nrf_delay_ms(125);
         idle_state_handle();
     }
 }

@@ -44,7 +44,8 @@ uint32_t motor_control_init(uint32_t init_left_pwm_pin,
     app_pwm_config_t pwm1_cfg = APP_PWM_DEFAULT_CONFIG_2CH(5000L, init_left_pwm_pin, init_right_pwm_pin);
 
     /* Switch the polarity of the second channel. */
-    //pwm1_cfg.pin_polarity[1] = APP_PWM_POLARITY_ACTIVE_HIGH;
+    pwm1_cfg.pin_polarity[0] = APP_PWM_POLARITY_ACTIVE_HIGH;
+    pwm1_cfg.pin_polarity[1] = APP_PWM_POLARITY_ACTIVE_HIGH;
 
     /* Initialize and enable PWM. */
     err_code = app_pwm_init(&PWM1,&pwm1_cfg,pwm_ready_callback);
