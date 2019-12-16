@@ -83,8 +83,11 @@
 #include "nrf_log_ctrl.h"
 #include "nrf_log_default_backends.h"
 
+#include "nrf_drv_gpiote.h"
+
 #include "motor_control.h"
 #include "PID.h"
+#include "app_mpu.h"
 
 
 #define DEVICE_NAME                     "Nordic_Template"                       /**< Name of device. Will be included in the advertising data. */
@@ -118,9 +121,19 @@
 #define MAX_THROTTLE                    100                                     /**< The absolute highest throttle value. */
 #define MAX_TURN_RATE                   30                                      /**< How much more power is given to one wheel compared to the other when turning around. */
 
+#define MPU_MPU_INT_PIN                 11                                      /**< Pin used for interrupts from MPUxxxx. */
+#define LEFT_MOTOR_PWM                  25                                      /**< Pin used for . */
+#define LEFT_MOTOR_PWM                  25                                      /**< Pin used for . */
+#define LEFT_MOTOR_PWM                  25                                      /**< Pin used for . */
+#define LEFT_MOTOR_PWM                  25                                      /**< Pin used for . */
+#define LEFT_MOTOR_PWM                  25                                      /**< Pin used for . */
+#define LEFT_MOTOR_PWM                  25                                      /**< Pin used for . */
+
 NRF_BLE_GATT_DEF(m_gatt);                                                       /**< GATT module instance. */
 NRF_BLE_QWR_DEF(m_qwr);                                                         /**< Context for the Queued Write module.*/
 BLE_ADVERTISING_DEF(m_advertising);                                             /**< Advertising module instance. */
+
+volatile bool mpu_data_ready = false;
 
 static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID;                        /**< Handle of the current connection. */
 static int32_t m_target_throttle = 0;
@@ -799,6 +812,60 @@ static void PID_update()
     tick(&m_PID_controller);
 }
 
+void mpu_init(void)
+{
+    uint32_t err_code;
+    // Initiate MPU driver
+    err_code = app_mpu_init();
+    APP_ERROR_CHECK(err_code); // Check for errors in return value
+    
+    // Setup and configure the MPU with intial values
+    app_mpu_config_t p_mpu_config = MPU_DEFAULT_CONFIG(); // Load default values
+    // The following line decieds how fast the nRF5 will sample the MPU for data. If you sample to fast
+    // the Softdevice might not be able to transmit all the packets and you will receive a BLE_ERROR_NO_TX_PACKETS event.
+    p_mpu_config.smplrt_div = 199;   // Change sampelrate. Sample Rate = Gyroscope Output Rate / (1 + SMPLRT_DIV). 199 gives a sample rate of 5Hz
+    p_mpu_config.accel_config.afs_sel = AFS_2G; // Set accelerometer full scale range to 2G
+    err_code = app_mpu_config(&p_mpu_config); // Configure the MPU with above values
+    APP_ERROR_CHECK(err_code); // Check for errors in return value
+    
+    
+    // This is a way to configure the interrupt pin behaviour
+    app_mpu_int_pin_cfg_t p_int_pin_cfg = MPU_DEFAULT_INT_PIN_CONFIG(); // Default configurations
+    p_int_pin_cfg.int_rd_clear = 1; // When this bit is equal to 1, interrupt status bits are cleared on any read operation
+    err_code = app_mpu_int_cfg_pin(&p_int_pin_cfg); // Configure pin behaviour
+    APP_ERROR_CHECK(err_code); // Check for errors in return value
+    
+    // Enable the MPU interrupts
+    app_mpu_int_enable_t p_int_enable = MPU_DEFAULT_INT_ENABLE_CONFIG();
+    p_int_enable.data_rdy_en = 1; // Trigger interrupt everytime new sensor values are available
+    err_code = app_mpu_int_enable(&p_int_enable); // Configure interrupts
+    APP_ERROR_CHECK(err_code); // Check for errors in return value    
+}
+
+void int_pin_handler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action)
+{
+    // A rule of thumb is to do as little as possible in an interrupt routine. 
+    // Therefor we just set a flag like this, and check the flag in the main loop. 
+    mpu_data_ready = true;
+}
+
+static void gpiote_setup(void)
+{
+    uint32_t err_code;
+    if (!nrf_drv_gpiote_is_init())
+    {
+        err_code = nrf_drv_gpiote_init();
+        APP_ERROR_CHECK(err_code);
+    }
+    
+    nrf_drv_gpiote_in_config_t in_config = GPIOTE_CONFIG_IN_SENSE_LOTOHI(true);
+
+    err_code = nrf_drv_gpiote_in_init(MPU_MPU_INT_PIN, &in_config, int_pin_handler);
+    APP_ERROR_CHECK(err_code);
+
+    nrf_drv_gpiote_in_event_enable(MPU_MPU_INT_PIN, true);
+}
+
 /**@brief Function for application main entry.
  */
 int main(void)
@@ -827,6 +894,8 @@ int main(void)
     motor_control_init(LED_1,LED_3,0,LED_2,LED_4,1); // Test PWM and 1 bit of direction
     PID_controller_init(1.0, 0.1, 0.0);
     //motor_control_init(0,LED_1,LED_2,1,LED_3,LED_4); // Test direction
+    mpu_init();
+    gpiote_setup(); // Initialize to 
 
     int value = 0;
 
