@@ -57,9 +57,11 @@
  <Files>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="5" useTextEdit="1" useBinaryEdit="0" left="0" path="../../../motor_control.h" selected="0" top="0" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="76" useTextEdit="1" useBinaryEdit="0" left="0" path="../../../motor_control.c" selected="0" top="21" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="765" useTextEdit="1" useBinaryEdit="0" left="0" path="../../../main.c" selected="1" top="729" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="27" y="818" useTextEdit="1" useBinaryEdit="0" left="0" path="../../../main.c" selected="0" top="678" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="74" useTextEdit="1" useBinaryEdit="0" left="0" path="../../../PID.c" selected="0" top="44" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditRight" x="0" y="41" useTextEdit="1" useBinaryEdit="0" left="21" path="../../../PID.h" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="122" y="268" useTextEdit="1" useBinaryEdit="0" left="0" path="../../../app_mpu.h" selected="0" top="221" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="38" useTextEdit="1" useBinaryEdit="0" left="0" path="../../../nrf_drv_mpu.h" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="120" useTextEdit="1" useBinaryEdit="0" left="0" path="../../../../../../integration/nrfx/legacy/nrf_drv_twi.h" selected="1" top="73" codecName="Default"/>
  </Files>
- <ARMCrossStudioWindow activeProject="ble_app_template_pca10040_s132" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="Debug" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="C:/git/nRF5SDK160098a08e2/examples/ble_peripheral/nrf_robot_controller" debugSearchPath="" autoConnectCapabilities="3199"/>
+ <ARMCrossStudioWindow activeProject="ble_app_template_pca10040_s132" fileDialogDefaultFilter="" autoConnectTarget="J-Link" buildConfiguration="Debug" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="C:/git/nRF5SDK160098a08e2/examples/ble_peripheral/nrf_robot_controller" debugSearchPath="" autoConnectCapabilities="3711"/>
 </session>
