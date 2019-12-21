@@ -814,6 +814,12 @@ static void PID_update()
 
 void mpu_init(void)
 {
+    nrf_gpio_cfg_output(11);
+    nrf_gpio_cfg_output(12);
+    nrf_gpio_pin_write(11, true);
+    nrf_gpio_pin_write(12, false);
+
+/* Start of boiler plate from lib example */
     uint32_t err_code;
     // Initiate MPU driver
     err_code = app_mpu_init();
@@ -840,6 +846,7 @@ void mpu_init(void)
     p_int_enable.data_rdy_en = 1; // Trigger interrupt everytime new sensor values are available
     err_code = app_mpu_int_enable(&p_int_enable); // Configure interrupts
     APP_ERROR_CHECK(err_code); // Check for errors in return value    
+/* End of boilerplate */
 }
 
 void int_pin_handler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action)
@@ -891,7 +898,7 @@ int main(void)
 
     advertising_start(erase_bonds);
 
-    motor_control_init(LED_1,LED_3,0,LED_2,LED_4,1); // Test PWM and 1 bit of direction
+    motor_control_init(26,22,23,27,24,2); // Test PWM and 1 bit of direction
     PID_controller_init(1.0, 0.1, 0.0);
     //motor_control_init(0,LED_1,LED_2,1,LED_3,LED_4); // Test direction
     mpu_init();
