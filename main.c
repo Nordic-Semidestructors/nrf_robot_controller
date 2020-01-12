@@ -85,7 +85,7 @@
 
 #include "motor_control.h"
 #include "PID.h"
-
+#include "rc_receiver_decoder.h"
 
 #define DEVICE_NAME                     "Nordic_Template"                       /**< Name of device. Will be included in the advertising data. */
 #define MANUFACTURER_NAME               "NordicSemiconductor"                   /**< Manufacturer. Will be passed to Device Information Service. */
@@ -129,6 +129,7 @@ static int32_t m_PID_output = 0;
 static PIDController m_PID_controller;
 
 static int32_t mock_turn_sensor_output = 0;
+
 
 /* YOUR_JOB: Declare all services structure your application is using
  *  BLE_XYZ_DEF(m_xyz);
@@ -189,8 +190,9 @@ static void pm_evt_handler(pm_evt_t const * p_evt)
 static void timers_init(void)
 {
     // Initialize timer module.
-    ret_code_t err_code = app_timer_init();
-    APP_ERROR_CHECK(err_code);
+    
+    //ret_code_t err_code = app_timer_init();
+    //APP_ERROR_CHECK(err_code);
 
     // Create timers.
 
@@ -743,7 +745,7 @@ static void motor_control_update(int32_t throttle, int32_t turn_rate)
         left_motor_throttle = -right_motor_throttle - turn_rate * 2;
     }
 
-    NRF_LOG_INFO("th :%d, tr:%d, lf:%d, rt:%d", throttle, turn_rate, left_motor_throttle, right_motor_throttle);
+    //NRF_LOG_INFO("th :%d, tr:%d, lf:%d, rt:%d", throttle, turn_rate, left_motor_throttle, right_motor_throttle);
 
     //value++;
     //value = (value % 100);
@@ -809,7 +811,7 @@ int main(void)
 
     // Initialize.
     log_init();
-    timers_init();
+    //timers_init();
 //    buttons_leds_init(&erase_bonds);
     power_management_init();
     ble_stack_init();
@@ -824,9 +826,11 @@ int main(void)
     NRF_LOG_INFO("Template example started.");
     application_timers_start();
 
+    rc_receiver_init();
+
     advertising_start(erase_bonds);
 
-    motor_control_init(26,24,2,27,22,23); // Test PWM and 1 bit of direction
+    motor_control_init(26,23,22,27,24,2); // Test PWM and 1 bit of direction
     //motor_control_init(LED_1,11,12,LED_2,26,27); // Test PWM and 1 bit of direction
     PID_controller_init(1.0, 0.1, 0.0);
     //motor_control_init(0,LED_1,LED_2,1,LED_3,LED_4); // Test direction
@@ -840,32 +844,15 @@ int main(void)
         
         m_target_throttle = 0;
         value++;
-        value = value % 200;
-        m_target_turn_rate = value - 100;
+        value = value % 100;
+        m_target_turn_rate = value - 50;
         m_target_turn_rate = 0;
+        nrf_delay_ms(125);
 
-        /*nrf_gpio_cfg_output(11);
-        nrf_gpio_cfg_output(12);
-        nrf_gpio_cfg_output(13);
-        nrf_gpio_cfg_output(14);
-        nrf_gpio_cfg_output(15);
-        nrf_gpio_cfg_output(16);
-        nrf_gpio_cfg_output(17);
-        nrf_gpio_cfg_output(18);
-
-        nrf_gpio_pin_write(11, true);
-        nrf_gpio_pin_write(12, true);
-        nrf_gpio_pin_write(13, true);  
-        nrf_gpio_pin_write(14, true);
-        nrf_gpio_pin_write(15, true);
-        nrf_gpio_pin_write(16, true);
-        nrf_gpio_pin_write(17, true);
-        nrf_gpio_pin_write(18, true);*/
         /* End test code */
         //PID_update();
-        motor_control_update(m_target_throttle, m_target_turn_rate);    // Direct control
+        motor_control_update(0, 0);    // Direct control
         //motor_control_update(m_target_throttle, m_PID_output);  // PID Enabled
-        nrf_delay_ms(125);
         idle_state_handle();
     }
 }
