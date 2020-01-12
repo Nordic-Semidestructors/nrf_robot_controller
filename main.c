@@ -89,6 +89,14 @@
 #include "PID.h"
 #include "app_mpu.h"
 
+#include "app_uart.h"
+#if defined (UART_PRESENT)
+#include "nrf_uart.h"
+#endif
+#if defined (UARTE_PRESENT)
+#include "nrf_uarte.h"
+#endif
+
 
 #define DEVICE_NAME                     "Nordic_Template"                       /**< Name of device. Will be included in the advertising data. */
 #define MANUFACTURER_NAME               "NordicSemiconductor"                   /**< Manufacturer. Will be passed to Device Information Service. */
@@ -128,6 +136,9 @@
 #define LEFT_MOTOR_PWM                  25                                      /**< Pin used for . */
 #define LEFT_MOTOR_PWM                  25                                      /**< Pin used for . */
 #define LEFT_MOTOR_PWM                  25                                      /**< Pin used for . */
+
+#define UART_TX_BUF_SIZE 256                         /**< UART TX buffer size. */
+#define UART_RX_BUF_SIZE 256                         /**< UART RX buffer size. */
 
 NRF_BLE_GATT_DEF(m_gatt);                                                       /**< GATT module instance. */
 NRF_BLE_QWR_DEF(m_qwr);                                                         /**< Context for the Queued Write module.*/
@@ -816,8 +827,16 @@ void mpu_init(void)
 {
     nrf_gpio_cfg_output(11);
     nrf_gpio_cfg_output(12);
+    nrf_gpio_cfg_output(15);
+    nrf_gpio_cfg_output(16);
+    nrf_gpio_cfg_output(17);
+    nrf_gpio_cfg_output(18);
     nrf_gpio_pin_write(11, true);
     nrf_gpio_pin_write(12, false);
+    nrf_gpio_pin_write(15, false);
+    nrf_gpio_pin_write(16, false);
+    nrf_gpio_pin_write(17, false);
+    nrf_gpio_pin_write(18, false);
 
 /* Start of boiler plate from lib example */
     uint32_t err_code;
@@ -873,6 +892,45 @@ static void gpiote_setup(void)
     nrf_drv_gpiote_in_event_enable(MPU_MPU_INT_PIN, true);
 }
 
+void uart_error_handle(app_uart_evt_t * p_event)
+{
+    if (p_event->evt_type == APP_UART_COMMUNICATION_ERROR)
+    {
+        //APP_ERROR_HANDLER(p_event->data.error_communication);
+    }
+    else if (p_event->evt_type == APP_UART_FIFO_ERROR)
+    {
+        //APP_ERROR_HANDLER(p_event->data.error_code);
+    }
+}
+
+static void serial_receiver_init(void)
+{
+    uint32_t err_code;
+    const app_uart_comm_params_t comm_params =
+      {
+          3,
+          4,
+          28,
+          29,
+          APP_UART_FLOW_CONTROL_DISABLED,
+          false,
+#if defined (UART_PRESENT)
+          NRF_UART_BAUDRATE_115200
+#else
+          NRF_UARTE_BAUDRATE_115200
+#endif
+      };
+
+    APP_UART_FIFO_INIT(&comm_params,
+                         UART_RX_BUF_SIZE,
+                         UART_TX_BUF_SIZE,
+                         uart_error_handle,
+                         APP_IRQ_PRIORITY_LOWEST,
+                         err_code);
+
+    APP_ERROR_CHECK(err_code);
+}
 /**@brief Function for application main entry.
  */
 int main(void)
@@ -884,25 +942,26 @@ int main(void)
     timers_init();
 //    buttons_leds_init(&erase_bonds);
     power_management_init();
-    ble_stack_init();
+    /*ble_stack_init();
     gap_params_init();
     gatt_init();
     advertising_init();
     services_init();
     conn_params_init();
-    peer_manager_init();
+    peer_manager_init();*/
 
     // Start execution.
     NRF_LOG_INFO("Template example started.");
     application_timers_start();
 
-    advertising_start(erase_bonds);
+    //advertising_start(erase_bonds);
 
     motor_control_init(26,22,23,27,24,2); // Test PWM and 1 bit of direction
     PID_controller_init(1.0, 0.1, 0.0);
     //motor_control_init(0,LED_1,LED_2,1,LED_3,LED_4); // Test direction
-    mpu_init();
-    gpiote_setup(); // Initialize to 
+    //mpu_init();
+    gpiote_setup();
+    serial_receiver_init(); // A Spektrum satelite receiver is connected to the uart and communicates with a DX6i transmitter.
 
     int value = 0;
 
@@ -910,18 +969,21 @@ int main(void)
     for (;;)
     {
         /* Test code */
-        
-        m_target_throttle = 0;
+        uint8_t cr;
+        while (app_uart_get(&cr) != NRF_SUCCESS);
+        NRF_LOG_INFO("cr 0x%hhx", cr);
+
+        /*m_target_throttle = 0;
         value++;
         value = value % 60;
         m_target_turn_rate = 15; //value - 30;
-
+*/
         /* End test code */
-        PID_update();
+  /*      PID_update();
         motor_control_update(m_target_throttle, m_target_turn_rate);    // Direct control
         //motor_control_update(m_target_throttle, m_PID_output);  // PID Enabled
         nrf_delay_ms(25);
-        idle_state_handle();
+        idle_state_handle();*/
     }
 }
 
