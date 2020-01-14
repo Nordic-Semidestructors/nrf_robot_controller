@@ -803,6 +803,23 @@ static void PID_update()
     tick(&m_PID_controller);
 }
 
+void rc_receiver_event_handler(uint32_t channel, uint32_t value)
+{
+    if (channel == 0)
+    {
+        // value is a number in the rance [0, 16000> as this is the most accurate available setting for TIMER3.
+        m_target_throttle = value / 80 - 100;
+        NRF_LOG_INFO("throttle %d", m_target_throttle)
+    }
+
+    if (channel == 1)
+    {
+        // value is a number in the rance [0, 16000> as this is the most accurate available setting for TIMER3.
+        m_target_turn_rate = value / 80 - 100;
+        NRF_LOG_INFO("turn rate %d", m_target_turn_rate)
+    }
+}
+
 /**@brief Function for application main entry.
  */
 int main(void)
@@ -826,7 +843,7 @@ int main(void)
     NRF_LOG_INFO("Template example started.");
     application_timers_start();
 
-    rc_receiver_init();
+    rc_receiver_init(rc_receiver_event_handler);
 
     advertising_start(erase_bonds);
 
