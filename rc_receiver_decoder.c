@@ -34,6 +34,7 @@ void nrfx_timer_evt_handler(nrf_timer_event_t event_type, void * p_context)
 
 void nrfx_gpiote_evt_handler(nrfx_gpiote_pin_t pin, nrf_gpiote_polarity_t action)
 {
+    //NRF_LOG_INFO("Test");
     uint32_t err_code;
     uint32_t interrupt_channel = ERR_INTERRUPT_CHANNEL;
     // Find which rc channel just triggered
@@ -69,7 +70,7 @@ void nrfx_gpiote_evt_handler(nrfx_gpiote_pin_t pin, nrf_gpiote_polarity_t action
         err_code = nrf_drv_ppi_channel_enable(ppi_channel_start[interrupt_channel]);
         APP_ERROR_CHECK(err_code);
         uint32_t capture_value = nrfx_timer_capture_get(&rc_timer, interrupt_channel);
-        NRF_LOG_INFO("%d %d", interrupt_channel, capture_value/16);
+        //NRF_LOG_INFO("%d %d", interrupt_channel, capture_value/16);
         
         // Translate from timer to a value in the rance [0, 16000>
         // Raw value in range

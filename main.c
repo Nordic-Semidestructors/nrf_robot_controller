@@ -433,7 +433,7 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
             break;
 
         case BLE_ADV_EVT_IDLE:
-            sleep_mode_enter();
+            //sleep_mode_enter();
             break;
 
         default:
@@ -738,11 +738,11 @@ static void motor_control_update(int32_t throttle, int32_t turn_rate)
     }
     if (left_motor_throttle < -MAX_THROTTLE) {        
         left_motor_throttle = -MAX_THROTTLE;
-        right_motor_throttle = -left_motor_throttle + turn_rate * 2;
+        right_motor_throttle = -left_motor_throttle - turn_rate * 2;
     }
     if (right_motor_throttle < -MAX_THROTTLE) {
         right_motor_throttle = -MAX_THROTTLE;
-        left_motor_throttle = -right_motor_throttle - turn_rate * 2;
+        left_motor_throttle = -right_motor_throttle + turn_rate * 2;
     }
 
     //NRF_LOG_INFO("th :%d, tr:%d, lf:%d, rt:%d", throttle, turn_rate, left_motor_throttle, right_motor_throttle);
@@ -824,7 +824,7 @@ void rc_receiver_event_handler(uint32_t channel, uint32_t value)
  */
 int main(void)
 {
-    bool erase_bonds;
+    bool erase_bonds = false;
 
     // Initialize.
     log_init();
@@ -868,7 +868,7 @@ int main(void)
 
         /* End test code */
         //PID_update();
-        motor_control_update(0, 0);    // Direct control
+        motor_control_update(m_target_throttle, -m_target_turn_rate);    // Direct control
         //motor_control_update(m_target_throttle, m_PID_output);  // PID Enabled
         idle_state_handle();
     }
