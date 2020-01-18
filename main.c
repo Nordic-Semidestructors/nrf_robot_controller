@@ -847,7 +847,7 @@ int main(void)
 
     advertising_start(erase_bonds);
 
-    motor_control_init(26,23,22,27,24,2); // Test PWM and 1 bit of direction
+    motor_control_init(26,22,23,27,2,24); // Test PWM and 1 bit of direction
     //motor_control_init(LED_1,11,12,LED_2,26,27); // Test PWM and 1 bit of direction
     PID_controller_init(1.0, 0.1, 0.0);
     //motor_control_init(0,LED_1,LED_2,1,LED_3,LED_4); // Test direction
